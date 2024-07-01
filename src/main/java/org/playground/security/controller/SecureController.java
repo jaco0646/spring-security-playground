@@ -9,6 +9,7 @@ public class SecureController {
     public static final String HEADER = "/secure/header";
 
     @GetMapping("/")
+//    @CrossOrigin("http://localhost:8080")  // Allow access from the CorsController index.html script.
     public String home() {
         return "Hello World";
     }

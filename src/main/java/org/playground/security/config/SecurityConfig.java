@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import java.util.List;
@@ -35,15 +36,28 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
         RequestMatcher headerMatcher = new MvcRequestMatcher(introspector, HEADER);
         Filter filter = authenticationFilter(headerMatcher);
-        return http
+        http
                 .addFilterBefore(filter, BasicAuthenticationFilter.class)
                 .authorizeHttpRequests().requestMatchers(headerMatcher).authenticated()
                 .and()
                 .authorizeHttpRequests().requestMatchers(BASIC).authenticated().and().httpBasic()
                 .and()
-                .authorizeHttpRequests().requestMatchers("/**").permitAll()
-                .and()
-                .build();
+                .authorizeHttpRequests().requestMatchers("/**").permitAll();
+
+        /*  These settings are redundant with default configuration (which denies all cross-origin requests).
+               * http.cors().disable();
+               * http.cors(AbstractHttpConfigurer::disable);
+         */
+
+        http.cors(corsConfigurer -> corsConfigurer.configurationSource(
+                httpServletRequest -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of());  // List allowed origins here, e.g. "http://localhost:8080"
+                    return config;
+                }
+        ));
+
+        return http.build();
     }
 
     private AuthenticationFilter authenticationFilter(RequestMatcher requestMatcher) {
